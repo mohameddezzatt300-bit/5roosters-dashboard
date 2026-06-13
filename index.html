@@ -391,18 +391,27 @@ function renderTable() {
   let rows = sorted.map((b,i) => {
     const g = growthMap[b.name];
     const salesGrowth = g ? g.dailyGrowth : 0;
+    const monthlySalesGrowth = g ? g.monthlyGrowth : 0;
     const transGrowth = g ? g.dailyTransGrowth : 0;
+    const monthlyTransGrowth = g ? g.monthlyTransGrowth : 0;
+    const avgCheckGrowth = g ? g.avgCheckGrowth : 0;
     const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
     const achievedPct = b.achieved*100;
     const barColor = achievedPct>=40?'var(--green)':achievedPct>=30?'var(--orange)':'var(--red)';
+    const gb = (v) => `<span class="growth-badge ${v>=0?'up':'down'}">${v>=0?'▲':'▼'} ${pct(Math.abs(v))}</span>`;
 
     return `<tr>
       <td><div class="branch-name"><span class="rank ${rankClass}">${i+1}</span>${b.name}</div></td>
       <td style="font-weight:600">${fmtFull(b.dailySales)}</td>
-      <td><span class="growth-badge ${salesGrowth>=0?'up':'down'}">${salesGrowth>=0?'▲':'▼'} ${pct(Math.abs(salesGrowth))}</span></td>
+      <td>${gb(salesGrowth)}</td>
       <td>${fmtFull(b.monthlySales)}</td>
+      <td>${gb(monthlySalesGrowth)}</td>
       <td>${fmtFull(b.dailyTrans)}</td>
+      <td>${gb(transGrowth)}</td>
+      <td>${fmtFull(b.monthlyTrans)}</td>
+      <td>${gb(monthlyTransGrowth)}</td>
       <td>${b.avgCheck.toFixed(1)}</td>
+      <td>${gb(avgCheckGrowth)}</td>
       <td>
         <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(achievedPct*2,100)}%;background:${barColor}"></div></div>
         <div class="goal-text">${pct(b.achieved)} of ${fmt(b.goal)}</div>
@@ -419,8 +428,9 @@ function renderTable() {
     <div style="overflow-x:auto">
     <table>
       <thead><tr>
-        <th>Branch</th><th>Daily Sales</th><th>Growth</th><th>Monthly Sales</th>
-        <th>Transactions</th><th>Avg Check</th><th>Goal Progress</th><th>Forecast</th>
+        <th>Branch</th><th>Daily Sales</th><th>Daily Sales Growth</th><th>Monthly Sales</th><th>Monthly Sales Growth</th>
+        <th>Daily Trans.</th><th>Daily Trans. Growth</th><th>Monthly Trans.</th><th>Monthly Trans. Growth</th>
+        <th>Avg Check</th><th>A.Check Growth</th><th>Goal Progress</th><th>Forecast</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
