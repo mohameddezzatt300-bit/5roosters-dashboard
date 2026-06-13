@@ -330,6 +330,10 @@ function renderCharts() {
       <canvas id="chartComparison"></canvas>
     </div>
     <div class="chart-card">
+      <div class="chart-title"><div class="dot" style="background:var(--cyan)"></div>Top 10 Branches — Daily Transactions</div>
+      <canvas id="chartDailyTrans"></canvas>
+    </div>
+    <div class="chart-card">
       <div class="chart-title"><div class="dot" style="background:var(--purple)"></div>Average Check by Branch</div>
       <canvas id="chartAvgCheck"></canvas>
     </div>
@@ -360,6 +364,14 @@ function renderCharts() {
       {label:'2025',data:compBranches.map(b=>compMap[b.name]||0),backgroundColor:'rgba(100,116,139,.5)',borderRadius:4,barPercentage:.8,categoryPercentage:.6}
     ]},
     options:{...chartDef,plugins:{legend:{display:true,labels:{color:'#9ca3af',font:{size:11}}}},scales:{...chartDef.scales,x:{...chartDef.scales.x,ticks:{...chartDef.scales.x.ticks,maxRotation:45}}}}
+  }));
+
+  const transSorted = [...d.branches2026].sort((a,b)=>b.dailyTrans-a.dailyTrans);
+  const top10Trans = transSorted.slice(0,10);
+  chartInstances.push(new Chart(document.getElementById('chartDailyTrans'),{
+    type:'bar',
+    data:{labels:top10Trans.map(b=>b.name),datasets:[{data:top10Trans.map(b=>b.dailyTrans),backgroundColor:['#06b6d4','#22d3ee','#67e8f9','#0ea5e9','#38bdf8','#7dd3fc','#0284c7','#0369a1','#0891b2','#155e75'],borderRadius:6,barPercentage:.7}]},
+    options:{...chartDef,indexAxis:'y',scales:{...chartDef.scales,x:{...chartDef.scales.x,position:'top',ticks:{...chartDef.scales.x.ticks,callback:v=>fmtFull(v)}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:function(v){return this.getLabelForValue(v)}}}}}
   }));
 
   const avgSorted = [...d.branches2026].filter(b=>b.avgCheck>0).sort((a,b)=>b.avgCheck-a.avgCheck);
