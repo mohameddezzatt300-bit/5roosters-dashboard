@@ -254,13 +254,13 @@ function parseSheet(ws) {
     const cell = ws[XLSX.utils.encode_cell({r,c})];
     return cell ? cell.v : null;
   };
+  const valFmt = (r,c) => {
+    const cell = ws[XLSX.utils.encode_cell({r,c})];
+    return cell ? (cell.w || String(cell.v)) : null;
+  };
   const month = val(0,1);
   const day = val(1,1);
-  const dateRaw = val(2,1);
-  let dateStr = '';
-  if(dateRaw instanceof Date) {
-    dateStr = dateRaw.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
-  } else { dateStr = String(dateRaw); }
+  const dateStr = valFmt(2,1);
 
   const branches2026 = [];
   for(let r=5; r<29; r++) {
