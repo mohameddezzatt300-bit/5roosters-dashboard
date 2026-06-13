@@ -43,8 +43,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .dropdown-item:hover{background:var(--card2)}
 #fileInput{display:none}
 .container{max-width:1440px;margin:0 auto;padding:24px 32px 48px}
+
+/* KPI Cards */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;cursor:pointer;transition:all .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.kpi.active{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .kpi.red::before{background:linear-gradient(90deg,var(--red),var(--brand2))}
 .kpi.green::before{background:linear-gradient(90deg,var(--green),#4ade80)}
@@ -56,11 +60,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .kpi-value{font-size:26px;font-weight:800;margin-bottom:6px}
 .kpi-sub{font-size:12px;display:flex;align-items:center;gap:4px}
 .kpi-sub.up{color:var(--green)}.kpi-sub.down{color:var(--red)}
+.kpi-hint{font-size:10px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:4px}
+
+/* Tabs Navigation */
+.tabs-nav{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px}
+.tab-btn{padding:8px 16px;border-radius:8px;border:none;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;color:var(--text2);background:transparent;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--text);background:var(--card2)}
+.tab-btn.active{color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand2))}
+.back-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;color:var(--text2);background:var(--card);transition:all .2s;display:inline-flex;align-items:center;gap:6px;margin-bottom:16px}
+.back-btn:hover{color:var(--text);border-color:var(--text3)}
+
+/* Tab Content */
+.tab-page{display:none}
+.tab-page.active{display:block}
+
+/* Charts */
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
 .chart-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .chart-title .dot{width:8px;height:8px;border-radius:50%}
 .full-width{grid-column:1/-1}
+
+/* Tables */
 .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px}
 .table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .table-header h3{font-size:14px;font-weight:700}
@@ -79,9 +100,16 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .growth-badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
 .growth-badge.up{background:var(--green-bg);color:var(--green)}
 .growth-badge.down{background:var(--red-bg);color:var(--red)}
-.progress-bar{width:100px;height:6px;background:var(--card2);border-radius:3px;overflow:hidden}
-.progress-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.progress-bar{width:120px;height:8px;background:var(--card2);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;transition:width .6s ease}
 .goal-text{font-size:11px;color:var(--text2);margin-top:3px}
+
+/* Detail page header */
+.detail-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.detail-header .detail-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800}
+.detail-header h2{font-size:18px;font-weight:800}
+.detail-header p{font-size:13px;color:var(--text2)}
+
 .upload-zone{border:2px dashed var(--border);border-radius:14px;padding:48px;text-align:center;margin-bottom:24px;transition:all .2s;cursor:pointer}
 .upload-zone:hover,.upload-zone.dragover{border-color:var(--brand);background:rgba(230,57,70,.05)}
 .upload-zone h3{font-size:16px;margin-bottom:8px}
@@ -101,7 +129,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 }
 @media print{
   body{background:#fff;color:#000}
-  .btn,.header-right,.upload-zone{display:none!important}
+  .btn,.header-right,.upload-zone,.tabs-nav,.back-btn,.kpi-hint{display:none!important}
 }
 </style>
 </head>
@@ -161,9 +189,33 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 
   <div id="dashboardContent" style="display:none">
-    <div class="kpi-row" id="kpiRow"></div>
-    <div class="charts-row" id="chartsRow"></div>
-    <div class="table-wrap" id="tableWrap"></div>
+    <!-- Tabs Navigation -->
+    <div class="tabs-nav" id="tabsNav">
+      <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+      <button class="tab-btn" onclick="switchTab('daily-sales')">Daily Sales</button>
+      <button class="tab-btn" onclick="switchTab('monthly-sales')">Monthly Sales</button>
+      <button class="tab-btn" onclick="switchTab('daily-trans')">Daily Transactions</button>
+      <button class="tab-btn" onclick="switchTab('monthly-trans')">Monthly Transactions</button>
+      <button class="tab-btn" onclick="switchTab('avg-check')">Avg. Check</button>
+      <button class="tab-btn" onclick="switchTab('goals')">Goal Achievement</button>
+      <button class="tab-btn" onclick="switchTab('growth')">Growth YoY</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="tab-page active" id="tab-overview">
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="charts-row" id="chartsRow"></div>
+      <div class="table-wrap" id="tableWrap"></div>
+    </div>
+
+    <!-- Detail Tabs -->
+    <div class="tab-page" id="tab-daily-sales"></div>
+    <div class="tab-page" id="tab-monthly-sales"></div>
+    <div class="tab-page" id="tab-daily-trans"></div>
+    <div class="tab-page" id="tab-monthly-trans"></div>
+    <div class="tab-page" id="tab-avg-check"></div>
+    <div class="tab-page" id="tab-goals"></div>
+    <div class="tab-page" id="tab-growth"></div>
   </div>
 </div>
 
@@ -172,6 +224,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <script>
 let rawData = null;
 let chartInstances = [];
+let detailCharts = [];
 
 const fileInput = document.getElementById('fileInput');
 const uploadZone = document.getElementById('uploadZone');
@@ -200,16 +253,13 @@ function parseSheet(ws) {
     const cell = ws[XLSX.utils.encode_cell({r,c})];
     return cell ? cell.v : null;
   };
-
   const month = val(0,1);
   const day = val(1,1);
   const dateRaw = val(2,1);
   let dateStr = '';
   if(dateRaw instanceof Date) {
     dateStr = dateRaw.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
-  } else {
-    dateStr = String(dateRaw);
-  }
+  } else { dateStr = String(dateRaw); }
 
   const branches2026 = [];
   for(let r=5; r<29; r++) {
@@ -223,7 +273,6 @@ function parseSheet(ws) {
       avgDailySales: val(r,10)||0, forecast: val(r,11)||0, goalOverDaily: val(r,12)||0
     });
   }
-
   const branches2025 = [];
   for(let r=33; r<57; r++) {
     const name = val(r,0);
@@ -236,7 +285,6 @@ function parseSheet(ws) {
       avgCheck: val(r,9)||0, avgCheckGrowth: val(r,10)||0
     });
   }
-
   const total2026 = { dailySales: val(60,1)||0, monthlySales: val(60,3)||0, dailyTrans: val(60,5)||0, monthlyTrans: val(60,7)||0, avgCheck: val(60,9)||0 };
   const total2025 = { dailySales: val(58,1)||0, monthlySales: val(58,3)||0, dailyTrans: val(58,5)||0, monthlyTrans: val(58,7)||0, avgCheck: val(58,9)||0 };
   const growth = { dailySales: val(62,1)||0, monthlySales: val(62,3)||0, dailyTrans: val(62,5)||0, monthlyTrans: val(62,7)||0, avgCheck: val(62,9)||0 };
@@ -257,6 +305,18 @@ function growthArrow(v) {
   const arrow = v>=0?'▲':'▼';
   return `<span class="kpi-sub ${cls}">${arrow} ${pct(Math.abs(v))} vs last year</span>`;
 }
+function gb(v) { return `<span class="growth-badge ${v>=0?'up':'down'}">${v>=0?'▲':'▼'} ${pct(Math.abs(v))}</span>`; }
+function rankClass(i) { return i===0?'gold':i===1?'silver':i===2?'bronze':'normal'; }
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(b => { if(b.textContent.toLowerCase().replace(/[\s.]/g,'-').includes(tab) || (tab==='overview' && b.textContent==='Overview') || (tab==='growth' && b.textContent==='Growth YoY') || (tab==='goals' && b.textContent==='Goal Achievement')) b.classList.add('active'); });
+  if(tab !== 'overview') renderDetailTab(tab);
+  window.scrollTo(0,0);
+}
 
 function renderDashboard() {
   document.getElementById('emptyState').style.display = 'none';
@@ -272,36 +332,38 @@ function renderDashboard() {
   const totalAchieved = d.branches2026.reduce((s,b)=>s+b.monthlySales,0);
   const goalPct = totalGoal>0? totalAchieved/totalGoal : 0;
 
+  const hint = `<div class="kpi-hint">▸ Click for full details</div>`;
+
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi red">
+    <div class="kpi red" onclick="switchTab('daily-sales')">
       <div class="kpi-label">Today's Sales</div>
       <div class="kpi-value">${fmt(d.total2026.dailySales)}</div>
-      ${growthArrow(d.growth.dailySales)}
+      ${growthArrow(d.growth.dailySales)}${hint}
     </div>
-    <div class="kpi green">
+    <div class="kpi green" onclick="switchTab('monthly-sales')">
       <div class="kpi-label">Monthly Sales</div>
       <div class="kpi-value">${fmt(d.total2026.monthlySales)}</div>
-      ${growthArrow(d.growth.monthlySales)}
+      ${growthArrow(d.growth.monthlySales)}${hint}
     </div>
-    <div class="kpi blue">
+    <div class="kpi blue" onclick="switchTab('daily-trans')">
       <div class="kpi-label">Today's Transactions</div>
       <div class="kpi-value">${fmtFull(d.total2026.dailyTrans)}</div>
-      ${growthArrow(d.growth.dailyTrans)}
+      ${growthArrow(d.growth.dailyTrans)}${hint}
     </div>
-    <div class="kpi orange">
+    <div class="kpi orange" onclick="switchTab('monthly-trans')">
       <div class="kpi-label">Monthly Transactions</div>
       <div class="kpi-value">${fmtFull(d.total2026.monthlyTrans)}</div>
-      ${growthArrow(d.growth.monthlyTrans)}
+      ${growthArrow(d.growth.monthlyTrans)}${hint}
     </div>
-    <div class="kpi purple">
+    <div class="kpi purple" onclick="switchTab('avg-check')">
       <div class="kpi-label">Avg. Check</div>
       <div class="kpi-value">${d.total2026.avgCheck.toFixed(1)}</div>
-      ${growthArrow(d.growth.avgCheck)}
+      ${growthArrow(d.growth.avgCheck)}${hint}
     </div>
-    <div class="kpi cyan">
+    <div class="kpi cyan" onclick="switchTab('goals')">
       <div class="kpi-label">Goal Achievement</div>
       <div class="kpi-value">${pct(goalPct)}</div>
-      <span class="kpi-sub" style="color:var(--text2)">${fmt(totalAchieved)} / ${fmt(totalGoal)}</span>
+      <span class="kpi-sub" style="color:var(--text2)">${fmt(totalAchieved)} / ${fmt(totalGoal)}</span>${hint}
     </div>
   `;
 
@@ -313,7 +375,6 @@ function renderCharts() {
   const d = rawData;
   const sorted = [...d.branches2026].sort((a,b)=>b.dailySales-a.dailySales);
   const top10 = sorted.slice(0,10);
-
   const colors = ['#e63946','#ff6b35','#f59e0b','#22c55e','#06b6d4','#3b82f6','#a855f7','#ec4899','#64748b','#84cc16'];
 
   document.getElementById('chartsRow').innerHTML = `
@@ -387,14 +448,12 @@ function renderTable() {
   const sorted = [...d.branches2026].sort((a,b)=>b.dailySales-a.dailySales);
   const growthMap = {};
   d.branches2025.forEach(b=>{ growthMap[b.name] = b; });
-  const gb = (v) => `<span class="growth-badge ${v>=0?'up':'down'}">${v>=0?'▲':'▼'} ${pct(Math.abs(v))}</span>`;
 
   let mainRows = sorted.map((b,i) => {
-    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
     const achievedPct = b.achieved*100;
     const barColor = achievedPct>=40?'var(--green)':achievedPct>=30?'var(--orange)':'var(--red)';
     return `<tr>
-      <td><div class="branch-name"><span class="rank ${rankClass}">${i+1}</span>${b.name}</div></td>
+      <td><div class="branch-name"><span class="rank ${rankClass(i)}">${i+1}</span>${b.name}</div></td>
       <td style="font-weight:600">${fmtFull(b.dailySales)}</td>
       <td>${fmtFull(b.monthlySales)}</td>
       <td>${fmtFull(b.dailyTrans)}</td>
@@ -410,9 +469,8 @@ function renderTable() {
 
   let growthRows = sorted.map((b,i) => {
     const g = growthMap[b.name];
-    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
     return `<tr>
-      <td><div class="branch-name"><span class="rank ${rankClass}">${i+1}</span>${b.name}</div></td>
+      <td><div class="branch-name"><span class="rank ${rankClass(i)}">${i+1}</span>${b.name}</div></td>
       <td>${gb(g ? g.dailyGrowth : 0)}</td>
       <td>${gb(g ? g.monthlyGrowth : 0)}</td>
       <td>${gb(g ? g.dailyTransGrowth : 0)}</td>
@@ -436,13 +494,7 @@ function renderTable() {
       <tbody>${mainRows}</tbody>
     </table>
     </div>
-  `;
-
-  let growthWrap = document.createElement('div');
-  growthWrap.className = 'table-wrap';
-  growthWrap.id = 'growthTableWrap';
-  growthWrap.innerHTML = `
-    <div class="table-header">
+    <div class="table-header" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:0">
       <h3>Branch Performance — Growth vs Last Year</h3>
       <span class="badge" style="background:var(--green-bg);color:var(--green)">YoY Growth</span>
     </div>
@@ -457,9 +509,242 @@ function renderTable() {
     </table>
     </div>
   `;
-  const existing = document.getElementById('growthTableWrap');
-  if(existing) existing.remove();
-  document.getElementById('tableWrap').after(growthWrap);
+}
+
+function renderDetailTab(tab) {
+  detailCharts.forEach(c=>c.destroy());
+  detailCharts=[];
+  const d = rawData;
+  const growthMap = {};
+  d.branches2025.forEach(b=>{ growthMap[b.name] = b; });
+  const el = document.getElementById('tab-'+tab);
+
+  const configs = {
+    'daily-sales': {
+      title: "Today's Sales", subtitle: 'Daily sales breakdown for all branches',
+      color: 'var(--red)', bgColor: 'var(--red-bg)',
+      total: d.total2026.dailySales, growth: d.growth.dailySales,
+      sortKey: 'dailySales', valueKey: 'dailySales',
+      formatVal: v => fmtFull(v), unit: 'EGP',
+      growthKey: 'dailyGrowth',
+      extraCols: [{h:'Avg Daily Sales',k:'avgDailySales',f:v=>fmtFull(v)},{h:'Daily Goal',k:'dailyGoal',f:v=>fmtFull(v)}]
+    },
+    'monthly-sales': {
+      title: 'Monthly Sales', subtitle: 'Monthly sales breakdown for all branches',
+      color: 'var(--green)', bgColor: 'var(--green-bg)',
+      total: d.total2026.monthlySales, growth: d.growth.monthlySales,
+      sortKey: 'monthlySales', valueKey: 'monthlySales',
+      formatVal: v => fmtFull(v), unit: 'EGP',
+      growthKey: 'monthlyGrowth',
+      extraCols: [{h:'Forecast',k:'forecast',f:v=>fmt(v)},{h:'Goal',k:'goal',f:v=>fmt(v)}]
+    },
+    'daily-trans': {
+      title: "Today's Transactions", subtitle: 'Daily transaction count for all branches',
+      color: 'var(--blue)', bgColor: 'var(--blue-bg)',
+      total: d.total2026.dailyTrans, growth: d.growth.dailyTrans,
+      sortKey: 'dailyTrans', valueKey: 'dailyTrans',
+      formatVal: v => fmtFull(v), unit: '',
+      growthKey: 'dailyTransGrowth',
+      extraCols: [{h:'Avg Check',k:'avgCheck',f:v=>v.toFixed(1)}]
+    },
+    'monthly-trans': {
+      title: 'Monthly Transactions', subtitle: 'Monthly transaction count for all branches',
+      color: 'var(--orange)', bgColor: 'var(--orange-bg)',
+      total: d.total2026.monthlyTrans, growth: d.growth.monthlyTrans,
+      sortKey: 'monthlyTrans', valueKey: 'monthlyTrans',
+      formatVal: v => fmtFull(v), unit: '',
+      growthKey: 'monthlyTransGrowth',
+      extraCols: [{h:'Daily Trans.',k:'dailyTrans',f:v=>fmtFull(v)}]
+    },
+    'avg-check': {
+      title: 'Average Check', subtitle: 'Average check value for all branches',
+      color: 'var(--purple)', bgColor: 'var(--purple-bg)',
+      total: d.total2026.avgCheck, growth: d.growth.avgCheck,
+      sortKey: 'avgCheck', valueKey: 'avgCheck',
+      formatVal: v => v.toFixed(1), unit: 'EGP',
+      growthKey: 'avgCheckGrowth',
+      extraCols: [{h:'Daily Sales',k:'dailySales',f:v=>fmtFull(v)},{h:'Daily Trans.',k:'dailyTrans',f:v=>fmtFull(v)}]
+    }
+  };
+
+  if(tab === 'goals') {
+    renderGoalsTab(el); return;
+  }
+  if(tab === 'growth') {
+    renderGrowthTab(el); return;
+  }
+
+  const cfg = configs[tab];
+  const sorted = [...d.branches2026].sort((a,b) => b[cfg.sortKey] - a[cfg.sortKey]);
+
+  let rows = sorted.map((b,i) => {
+    const g = growthMap[b.name];
+    const gVal = g ? (g[cfg.growthKey]||0) : 0;
+    let extra = cfg.extraCols.map(c => `<td>${c.f(b[c.k])}</td>`).join('');
+    return `<tr>
+      <td><div class="branch-name"><span class="rank ${rankClass(i)}">${i+1}</span>${b.name}</div></td>
+      <td style="font-weight:700">${cfg.formatVal(b[cfg.valueKey])}</td>
+      <td>${gb(gVal)}</td>
+      ${extra}
+    </tr>`;
+  }).join('');
+
+  let extraHeaders = cfg.extraCols.map(c => `<th>${c.h}</th>`).join('');
+
+  el.innerHTML = `
+    <button class="back-btn" onclick="switchTab('overview')">← Back to Overview</button>
+    <div class="detail-header">
+      <div class="detail-icon" style="background:${cfg.bgColor};color:${cfg.color}">#</div>
+      <div>
+        <h2>${cfg.title}</h2>
+        <p>${cfg.subtitle} — Total: <strong>${cfg.formatVal(cfg.total)}</strong> ${cfg.unit} ${growthArrow(cfg.growth)}</p>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card full-width">
+        <div class="chart-title"><div class="dot" style="background:${cfg.color}"></div>All Branches — ${cfg.title}</div>
+        <canvas id="detailChart-${tab}" height="120"></canvas>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>${cfg.title} — All ${sorted.length} Branches</h3>
+        <span class="badge">${sorted.length} Branches</span>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Branch</th><th>${cfg.title}</th><th>Growth YoY</th>${extraHeaders}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>
+    </div>
+  `;
+
+  const allColors = sorted.map((_,i) => `hsl(${(i*15)%360},65%,55%)`);
+  detailCharts.push(new Chart(document.getElementById('detailChart-'+tab),{
+    type:'bar',
+    data:{labels:sorted.map(b=>b.name),datasets:[{data:sorted.map(b=>b[cfg.valueKey]),backgroundColor:allColors,borderRadius:4,barPercentage:.75}]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b7280',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b7280',callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.05)'}}}}
+  }));
+}
+
+function renderGoalsTab(el) {
+  const d = rawData;
+  const sorted = [...d.branches2026].filter(b=>b.goal>0).sort((a,b)=>b.achieved-a.achieved);
+  const totalGoal = sorted.reduce((s,b)=>s+b.goal,0);
+  const totalAchieved = sorted.reduce((s,b)=>s+b.monthlySales,0);
+  const goalPct = totalGoal>0? totalAchieved/totalGoal : 0;
+
+  let rows = sorted.map((b,i) => {
+    const achievedPct = b.achieved*100;
+    const barColor = achievedPct>=40?'var(--green)':achievedPct>=30?'var(--orange)':'var(--red)';
+    return `<tr>
+      <td><div class="branch-name"><span class="rank ${rankClass(i)}">${i+1}</span>${b.name}</div></td>
+      <td style="font-weight:700">${pct(b.achieved)}</td>
+      <td>
+        <div class="progress-bar" style="width:160px"><div class="progress-fill" style="width:${Math.min(achievedPct*2,100)}%;background:${barColor}"></div></div>
+      </td>
+      <td>${fmtFull(b.monthlySales)}</td>
+      <td>${fmtFull(b.goal)}</td>
+      <td>${fmtFull(b.remaining)}</td>
+      <td>${fmt(b.forecast)}</td>
+      <td>${fmt(b.avgDailySales)}</td>
+      <td>${fmt(b.dailyGoal)}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <button class="back-btn" onclick="switchTab('overview')">← Back to Overview</button>
+    <div class="detail-header">
+      <div class="detail-icon" style="background:var(--cyan-bg);color:var(--cyan)">🎯</div>
+      <div>
+        <h2>Goal Achievement</h2>
+        <p>All branches goal tracking — Overall: <strong>${pct(goalPct)}</strong> (${fmt(totalAchieved)} / ${fmt(totalGoal)})</p>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card full-width">
+        <div class="chart-title"><div class="dot" style="background:var(--cyan)"></div>Goal Achievement — All Branches</div>
+        <canvas id="detailChart-goals" height="140"></canvas>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>Goal Details — All ${sorted.length} Branches</h3>
+        <span class="badge">${sorted.length} Branches</span>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Branch</th><th>Achieved %</th><th>Progress</th><th>Monthly Sales</th><th>Goal</th><th>Remaining</th><th>Forecast</th><th>Avg Daily</th><th>Daily Goal</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>
+    </div>
+  `;
+
+  detailCharts.push(new Chart(document.getElementById('detailChart-goals'),{
+    type:'bar',
+    data:{labels:sorted.map(b=>b.name),datasets:[{data:sorted.map(b=>b.achieved*100),backgroundColor:sorted.map(b=>b.achieved>=.4?'#22c55e':b.achieved>=.3?'#f59e0b':'#ef4444'),borderRadius:4,barPercentage:.75}]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b7280',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b7280',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}}}}
+  }));
+}
+
+function renderGrowthTab(el) {
+  const d = rawData;
+  const growthMap = {};
+  d.branches2025.forEach(b=>{ growthMap[b.name] = b; });
+  const sorted = [...d.branches2026].sort((a,b)=>b.dailySales-a.dailySales);
+
+  let rows = sorted.map((b,i) => {
+    const g = growthMap[b.name];
+    return `<tr>
+      <td><div class="branch-name"><span class="rank ${rankClass(i)}">${i+1}</span>${b.name}</div></td>
+      <td>${gb(g?g.dailyGrowth:0)}</td>
+      <td>${gb(g?g.monthlyGrowth:0)}</td>
+      <td>${gb(g?g.dailyTransGrowth:0)}</td>
+      <td>${gb(g?g.monthlyTransGrowth:0)}</td>
+      <td>${gb(g?g.avgCheckGrowth:0)}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <button class="back-btn" onclick="switchTab('overview')">← Back to Overview</button>
+    <div class="detail-header">
+      <div class="detail-icon" style="background:var(--green-bg);color:var(--green)">📈</div>
+      <div>
+        <h2>Year-over-Year Growth</h2>
+        <p>Growth comparison across all metrics for all branches</p>
+      </div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card full-width">
+        <div class="chart-title"><div class="dot" style="background:var(--green)"></div>Daily Sales Growth — All Branches</div>
+        <canvas id="detailChart-growth" height="120"></canvas>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>Growth Details — All ${sorted.length} Branches</h3>
+        <span class="badge" style="background:var(--green-bg);color:var(--green)">YoY Growth</span>
+      </div>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Branch</th><th>Daily Sales</th><th>Monthly Sales</th><th>Daily Trans.</th><th>Monthly Trans.</th><th>Avg Check</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>
+    </div>
+  `;
+
+  const growthData = sorted.map(b => {
+    const g = growthMap[b.name];
+    return g ? g.dailyGrowth*100 : 0;
+  });
+  detailCharts.push(new Chart(document.getElementById('detailChart-growth'),{
+    type:'bar',
+    data:{labels:sorted.map(b=>b.name),datasets:[{data:growthData,backgroundColor:growthData.map(v=>v>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:4,barPercentage:.75}]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b7280',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b7280',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}}}}
+  }));
 }
 
 function toggleDropdown() {
