@@ -12,18 +12,18 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0f1117;--card:#1a1d27;--card2:#222639;--border:#2a2e3f;
-  --text:#e8eaed;--text2:#9ca3af;--text3:#6b7280;
-  --red:#ef4444;--red-bg:rgba(239,68,68,.12);
+  --bg:#121210;--card:#1c1b18;--card2:#262520;--border:#3a3830;
+  --text:#f5f0e8;--text2:#b8b0a0;--text3:#807868;
+  --red:#d42b2b;--red-bg:rgba(212,43,43,.12);
   --green:#22c55e;--green-bg:rgba(34,197,94,.12);
-  --orange:#f59e0b;--orange-bg:rgba(245,158,11,.12);
+  --orange:#e8a832;--orange-bg:rgba(232,168,50,.12);
   --blue:#3b82f6;--blue-bg:rgba(59,130,246,.12);
   --purple:#a855f7;--purple-bg:rgba(168,85,247,.12);
   --cyan:#06b6d4;--cyan-bg:rgba(6,182,212,.12);
-  --brand:#e63946;--brand2:#ff6b35;
+  --brand:#d42b2b;--brand2:#e8a832;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.header{background:linear-gradient(135deg,#1a1d27 0%,#2a1a1a 100%);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.header{background:linear-gradient(135deg,#1c1b18 0%,#2a2518 100%);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
 .header-left{display:flex;align-items:center;gap:16px}
 .logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--brand),var(--brand2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.3)}
 .brand-name{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--brand),var(--brand2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -382,9 +382,9 @@ function renderCharts() {
       <div class="chart-title"><div class="dot" style="background:var(--brand)"></div>Top 10 Branches — Daily Sales</div>
       <canvas id="chartDailySales"></canvas>
     </div>
-    <div class="chart-card">
-      <div class="chart-title"><div class="dot" style="background:var(--green)"></div>Goal Achievement by Branch</div>
-      <canvas id="chartGoal"></canvas>
+    <div class="chart-card full-width">
+      <div class="chart-title"><div class="dot" style="background:var(--green)"></div>Goal Achievement — All Branches</div>
+      <canvas id="chartGoal" height="100"></canvas>
     </div>
     <div class="chart-card">
       <div class="chart-title"><div class="dot" style="background:var(--blue)"></div>Monthly Sales — 2026 vs 2025</div>
@@ -393,10 +393,6 @@ function renderCharts() {
     <div class="chart-card">
       <div class="chart-title"><div class="dot" style="background:var(--cyan)"></div>Top 10 Branches — Daily Transactions</div>
       <canvas id="chartDailyTrans"></canvas>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title"><div class="dot" style="background:var(--purple)"></div>Average Check by Branch</div>
-      <canvas id="chartAvgCheck"></canvas>
     </div>
   `;
 
@@ -411,8 +407,8 @@ function renderCharts() {
   const goalBranches = d.branches2026.filter(b=>b.goal>0).sort((a,b)=>b.achieved-a.achieved);
   chartInstances.push(new Chart(document.getElementById('chartGoal'),{
     type:'bar',
-    data:{labels:goalBranches.map(b=>b.name),datasets:[{data:goalBranches.map(b=>b.achieved*100),backgroundColor:goalBranches.map(b=>b.achieved>=.4?'#22c55e':b.achieved>=.3?'#f59e0b':'#ef4444'),borderRadius:6,barPercentage:.7}]},
-    options:{...chartDef,indexAxis:'y',scales:{...chartDef.scales,x:{...chartDef.scales.x,position:'top',ticks:{...chartDef.scales.x.ticks,callback:v=>v+'%'}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:function(v){return this.getLabelForValue(v)}}}}}
+    data:{labels:goalBranches.map(b=>b.name),datasets:[{data:goalBranches.map(b=>b.achieved*100),backgroundColor:goalBranches.map(b=>b.achieved>=.4?'#22c55e':b.achieved>=.3?'#f59e0b':'#ef4444'),borderRadius:4,barPercentage:.75}]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b7280',font:{size:9},maxRotation:45},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b7280',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}}}}
   }));
 
   const compBranches = d.branches2026.filter(b=>b.monthlySales>0);
@@ -435,12 +431,6 @@ function renderCharts() {
     options:{...chartDef,indexAxis:'y',scales:{...chartDef.scales,x:{...chartDef.scales.x,position:'top',ticks:{...chartDef.scales.x.ticks,callback:v=>fmtFull(v)}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:function(v){return this.getLabelForValue(v)}}}}}
   }));
 
-  const avgSorted = [...d.branches2026].filter(b=>b.avgCheck>0).sort((a,b)=>b.avgCheck-a.avgCheck);
-  chartInstances.push(new Chart(document.getElementById('chartAvgCheck'),{
-    type:'bar',
-    data:{labels:avgSorted.map(b=>b.name),datasets:[{data:avgSorted.map(b=>b.avgCheck),backgroundColor:avgSorted.map((_,i)=>`hsl(${270+i*6},60%,55%)`),borderRadius:6,barPercentage:.7}]},
-    options:{...chartDef,scales:{...chartDef.scales,x:{...chartDef.scales.x,ticks:{...chartDef.scales.x.ticks,maxRotation:45}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:v=>v.toFixed(0)+' EGP'}}}}
-  }));
 }
 
 function renderTable() {
