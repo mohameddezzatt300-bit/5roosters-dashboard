@@ -387,31 +387,19 @@ function renderTable() {
   const sorted = [...d.branches2026].sort((a,b)=>b.dailySales-a.dailySales);
   const growthMap = {};
   d.branches2025.forEach(b=>{ growthMap[b.name] = b; });
+  const gb = (v) => `<span class="growth-badge ${v>=0?'up':'down'}">${v>=0?'▲':'▼'} ${pct(Math.abs(v))}</span>`;
 
-  let rows = sorted.map((b,i) => {
-    const g = growthMap[b.name];
-    const salesGrowth = g ? g.dailyGrowth : 0;
-    const monthlySalesGrowth = g ? g.monthlyGrowth : 0;
-    const transGrowth = g ? g.dailyTransGrowth : 0;
-    const monthlyTransGrowth = g ? g.monthlyTransGrowth : 0;
-    const avgCheckGrowth = g ? g.avgCheckGrowth : 0;
+  let mainRows = sorted.map((b,i) => {
     const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
     const achievedPct = b.achieved*100;
     const barColor = achievedPct>=40?'var(--green)':achievedPct>=30?'var(--orange)':'var(--red)';
-    const gb = (v) => `<span class="growth-badge ${v>=0?'up':'down'}">${v>=0?'▲':'▼'} ${pct(Math.abs(v))}</span>`;
-
     return `<tr>
       <td><div class="branch-name"><span class="rank ${rankClass}">${i+1}</span>${b.name}</div></td>
       <td style="font-weight:600">${fmtFull(b.dailySales)}</td>
-      <td>${gb(salesGrowth)}</td>
       <td>${fmtFull(b.monthlySales)}</td>
-      <td>${gb(monthlySalesGrowth)}</td>
       <td>${fmtFull(b.dailyTrans)}</td>
-      <td>${gb(transGrowth)}</td>
       <td>${fmtFull(b.monthlyTrans)}</td>
-      <td>${gb(monthlyTransGrowth)}</td>
       <td>${b.avgCheck.toFixed(1)}</td>
-      <td>${gb(avgCheckGrowth)}</td>
       <td>
         <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(achievedPct*2,100)}%;background:${barColor}"></div></div>
         <div class="goal-text">${pct(b.achieved)} of ${fmt(b.goal)}</div>
@@ -420,22 +408,58 @@ function renderTable() {
     </tr>`;
   }).join('');
 
+  let growthRows = sorted.map((b,i) => {
+    const g = growthMap[b.name];
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
+    return `<tr>
+      <td><div class="branch-name"><span class="rank ${rankClass}">${i+1}</span>${b.name}</div></td>
+      <td>${gb(g ? g.dailyGrowth : 0)}</td>
+      <td>${gb(g ? g.monthlyGrowth : 0)}</td>
+      <td>${gb(g ? g.dailyTransGrowth : 0)}</td>
+      <td>${gb(g ? g.monthlyTransGrowth : 0)}</td>
+      <td>${gb(g ? g.avgCheckGrowth : 0)}</td>
+    </tr>`;
+  }).join('');
+
   document.getElementById('tableWrap').innerHTML = `
     <div class="table-header">
-      <h3>Branch Performance Details</h3>
+      <h3>Branch Performance — Numbers</h3>
       <span class="badge">${sorted.length} Branches</span>
     </div>
     <div style="overflow-x:auto">
     <table>
       <thead><tr>
-        <th>Branch</th><th>Daily Sales</th><th>Daily Sales Growth</th><th>Monthly Sales</th><th>Monthly Sales Growth</th>
-        <th>Daily Trans.</th><th>Daily Trans. Growth</th><th>Monthly Trans.</th><th>Monthly Trans. Growth</th>
-        <th>Avg Check</th><th>A.Check Growth</th><th>Goal Progress</th><th>Forecast</th>
+        <th>Branch</th><th>Daily Sales</th><th>Monthly Sales</th>
+        <th>Daily Trans.</th><th>Monthly Trans.</th>
+        <th>Avg Check</th><th>Goal Progress</th><th>Forecast</th>
       </tr></thead>
-      <tbody>${rows}</tbody>
+      <tbody>${mainRows}</tbody>
     </table>
     </div>
   `;
+
+  let growthWrap = document.createElement('div');
+  growthWrap.className = 'table-wrap';
+  growthWrap.id = 'growthTableWrap';
+  growthWrap.innerHTML = `
+    <div class="table-header">
+      <h3>Branch Performance — Growth vs Last Year</h3>
+      <span class="badge" style="background:var(--green-bg);color:var(--green)">YoY Growth</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Branch</th><th>Daily Sales Growth</th><th>Monthly Sales Growth</th>
+        <th>Daily Trans. Growth</th><th>Monthly Trans. Growth</th>
+        <th>A.Check Growth</th>
+      </tr></thead>
+      <tbody>${growthRows}</tbody>
+    </table>
+    </div>
+  `;
+  const existing = document.getElementById('growthTableWrap');
+  if(existing) existing.remove();
+  document.getElementById('tableWrap').after(growthWrap);
 }
 
 function toggleDropdown() {
