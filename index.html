@@ -795,21 +795,21 @@ document.addEventListener('click', e => {
   if(!e.target.closest('#downloadDropdown')) document.getElementById('dropdownMenu').classList.remove('show');
 });
 
-async function captureCanvas() {
+async function captureCanvas(s) {
   return html2canvas(document.body, {
-    backgroundColor:'#0f1117', scale:2, useCORS:true,
+    backgroundColor:'#0f1117', scale:s||2, useCORS:true,
     logging:false, windowWidth:1440
   });
 }
 
 async function downloadPDF() {
   document.getElementById('dropdownMenu').classList.remove('show');
-  const canvas = await captureCanvas();
+  const canvas = await captureCanvas(1.2);
   const { jsPDF } = window.jspdf;
   const imgW = canvas.width; const imgH = canvas.height;
   const pdfW = 297; const pdfH = (imgH * pdfW) / imgW;
-  const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'p' : 'l', unit:'mm', format:[pdfW, pdfH] });
-  pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, pdfH);
+  const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'p' : 'l', unit:'mm', format:[pdfW, pdfH], compress:true });
+  pdf.addImage(canvas.toDataURL('image/jpeg', 0.75), 'JPEG', 0, 0, pdfW, pdfH);
   pdf.save('5Roosters_Dashboard.pdf');
 }
 
