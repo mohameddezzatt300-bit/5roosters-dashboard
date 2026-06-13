@@ -338,26 +338,31 @@ function renderDashboard() {
     <div class="kpi red" onclick="switchTab('daily-sales')">
       <div class="kpi-label">Today's Sales</div>
       <div class="kpi-value">${fmt(d.total2026.dailySales)}</div>
+      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.dailySales)} EGP</div>
       ${growthArrow(d.growth.dailySales)}${hint}
     </div>
     <div class="kpi green" onclick="switchTab('monthly-sales')">
       <div class="kpi-label">Monthly Sales</div>
       <div class="kpi-value">${fmt(d.total2026.monthlySales)}</div>
+      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.monthlySales)} EGP</div>
       ${growthArrow(d.growth.monthlySales)}${hint}
     </div>
     <div class="kpi blue" onclick="switchTab('daily-trans')">
       <div class="kpi-label">Today's Transactions</div>
       <div class="kpi-value">${fmtFull(d.total2026.dailyTrans)}</div>
+      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.dailyTrans)}</div>
       ${growthArrow(d.growth.dailyTrans)}${hint}
     </div>
     <div class="kpi orange" onclick="switchTab('monthly-trans')">
       <div class="kpi-label">Monthly Transactions</div>
       <div class="kpi-value">${fmtFull(d.total2026.monthlyTrans)}</div>
+      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.monthlyTrans)}</div>
       ${growthArrow(d.growth.monthlyTrans)}${hint}
     </div>
     <div class="kpi purple" onclick="switchTab('avg-check')">
       <div class="kpi-label">Avg. Check</div>
       <div class="kpi-value">${d.total2026.avgCheck.toFixed(1)}</div>
+      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${d.total2026.avgCheck.toFixed(1)} EGP</div>
       ${growthArrow(d.growth.avgCheck)}${hint}
     </div>
     <div class="kpi cyan" onclick="switchTab('goals')">
@@ -393,6 +398,10 @@ function renderCharts() {
     <div class="chart-card">
       <div class="chart-title"><div class="dot" style="background:var(--cyan)"></div>Top 10 Branches — Daily Transactions</div>
       <canvas id="chartDailyTrans"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><div class="dot" style="background:var(--purple)"></div>Average Check by Branch</div>
+      <canvas id="chartAvgCheck"></canvas>
     </div>
   `;
 
@@ -431,6 +440,12 @@ function renderCharts() {
     options:{...chartDef,indexAxis:'y',scales:{...chartDef.scales,x:{...chartDef.scales.x,position:'top',ticks:{...chartDef.scales.x.ticks,callback:v=>fmtFull(v)}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:function(v){return this.getLabelForValue(v)}}}}}
   }));
 
+  const avgSorted = [...d.branches2026].filter(b=>b.avgCheck>0).sort((a,b)=>b.avgCheck-a.avgCheck);
+  chartInstances.push(new Chart(document.getElementById('chartAvgCheck'),{
+    type:'bar',
+    data:{labels:avgSorted.map(b=>b.name),datasets:[{data:avgSorted.map(b=>b.avgCheck),backgroundColor:avgSorted.map((_,i)=>`hsl(${270+i*6},60%,55%)`),borderRadius:6,barPercentage:.7}]},
+    options:{...chartDef,scales:{...chartDef.scales,x:{...chartDef.scales.x,ticks:{...chartDef.scales.x.ticks,maxRotation:45}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:v=>v.toFixed(0)+' EGP'}}}}
+  }));
 }
 
 function renderTable() {
