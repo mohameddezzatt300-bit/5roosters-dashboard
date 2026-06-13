@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5 Roosters Fried Chicken — Sales Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;--card:#1a1d27;--card2:#222639;--border:#2a2e3f;
+  --text:#e8eaed;--text2:#9ca3af;--text3:#6b7280;
+  --red:#ef4444;--red-bg:rgba(239,68,68,.12);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.12);
+  --orange:#f59e0b;--orange-bg:rgba(245,158,11,.12);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,.12);
+  --purple:#a855f7;--purple-bg:rgba(168,85,247,.12);
+  --cyan:#06b6d4;--cyan-bg:rgba(6,182,212,.12);
+  --brand:#e63946;--brand2:#ff6b35;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,#1a1d27 0%,#2a1a1a 100%);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--brand),var(--brand2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.3)}
+.brand-name{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--brand),var(--brand2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.date-badge{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 16px;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.date-badge span{color:var(--text);font-weight:600}
+.btn{padding:10px 20px;border-radius:10px;border:none;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
+.btn-upload{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+.btn-upload:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(230,57,70,.4)}
+.btn-download{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.btn-download:hover{background:var(--card);border-color:var(--text3)}
+.dropdown{position:relative;display:inline-block}
+.dropdown-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--border);border-radius:10px;min-width:180px;z-index:100;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.dropdown-menu.show{display:block}
+.dropdown-item{padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s}
+.dropdown-item:hover{background:var(--card2)}
+#fileInput{display:none}
+.container{max-width:1440px;margin:0 auto;padding:24px 32px 48px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.red::before{background:linear-gradient(90deg,var(--red),var(--brand2))}
+.kpi.green::before{background:linear-gradient(90deg,var(--green),#4ade80)}
+.kpi.blue::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.kpi.orange::before{background:linear-gradient(90deg,var(--orange),#fbbf24)}
+.kpi.purple::before{background:linear-gradient(90deg,var(--purple),#c084fc)}
+.kpi.cyan::before{background:linear-gradient(90deg,var(--cyan),#22d3ee)}
+.kpi-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:800;margin-bottom:6px}
+.kpi-sub{font-size:12px;display:flex;align-items:center;gap:4px}
+.kpi-sub.up{color:var(--green)}.kpi-sub.down{color:var(--red)}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.chart-title .dot{width:8px;height:8px;border-radius:50%}
+.full-width{grid-column:1/-1}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-header h3{font-size:14px;font-weight:700}
+.table-header .badge{background:var(--blue-bg);color:var(--blue);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);text-align:left;border-bottom:1px solid var(--border);background:var(--card2);font-weight:600;white-space:nowrap}
+td{padding:10px 16px;font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.branch-name{font-weight:600;display:flex;align-items:center;gap:8px}
+.rank{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.rank.gold{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#000}
+.rank.silver{background:linear-gradient(135deg,#9ca3af,#d1d5db);color:#000}
+.rank.bronze{background:linear-gradient(135deg,#b45309,#d97706);color:#fff}
+.rank.normal{background:var(--card2);color:var(--text3)}
+.growth-badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.growth-badge.up{background:var(--green-bg);color:var(--green)}
+.growth-badge.down{background:var(--red-bg);color:var(--red)}
+.progress-bar{width:100px;height:6px;background:var(--card2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.goal-text{font-size:11px;color:var(--text2);margin-top:3px}
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:48px;text-align:center;margin-bottom:24px;transition:all .2s;cursor:pointer}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--brand);background:rgba(230,57,70,.05)}
+.upload-zone h3{font-size:16px;margin-bottom:8px}
+.upload-zone p{font-size:13px;color:var(--text2)}
+.empty-state{text-align:center;padding:80px 20px}
+.empty-state h2{font-size:24px;margin-bottom:12px}
+.empty-state p{color:var(--text2);font-size:14px;max-width:400px;margin:0 auto}
+.footer{text-align:center;padding:20px;color:var(--text3);font-size:11px;border-top:1px solid var(--border)}
+@media(max-width:768px){
+  .header{padding:16px}
+  .container{padding:16px}
+  .charts-row{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .kpi-value{font-size:20px}
+  table{font-size:12px}
+  th,td{padding:8px 10px}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .btn,.header-right,.upload-zone{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="header" id="dashHeader">
+  <div class="header-left">
+    <div class="logo-icon">5R</div>
+    <div>
+      <div class="brand-name">5 Roosters Fried Chicken</div>
+      <div class="brand-sub">Sales Performance Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="date-badge" id="dateBadge">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="10" height="9" rx="1"/><path d="M5 1v3M9 1v3M2 6h10"/></svg>
+      <span id="dateText">Upload a sheet to begin</span>
+    </div>
+    <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10V2M3 5l4-4 4 4"/><path d="M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2"/></svg>
+      Upload Sheet
+    </button>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+    <div class="dropdown" id="downloadDropdown">
+      <button class="btn btn-download" onclick="toggleDropdown()" id="btnDownload" style="display:none">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2v8M3 7l4 4 4-4"/><path d="M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2"/></svg>
+        Download
+      </button>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="dropdown-item" onclick="downloadPDF()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="1" width="10" height="12" rx="1"/><path d="M5 5h4M5 7h4M5 9h2"/></svg>
+          Download PDF
+        </div>
+        <div class="dropdown-item" onclick="downloadPNG()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="1" width="12" height="12" rx="1"/><circle cx="4.5" cy="4.5" r="1"/><path d="M1 10l3-3 2 2 3-3 4 4"/></svg>
+          Download PNG
+        </div>
+        <div class="dropdown-item" onclick="downloadExcel()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="1" width="10" height="12" rx="1"/><path d="M5 4l4 6M9 4L5 10"/></svg>
+          Download Excel
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container" id="mainContainer">
+  <div class="empty-state" id="emptyState">
+    <div style="font-size:64px;margin-bottom:16px">🍗</div>
+    <h2>Welcome to 5 Roosters Dashboard</h2>
+    <p>Upload your daily sales Excel sheet to view the performance dashboard</p>
+    <div class="upload-zone" id="uploadZone" style="margin-top:24px;max-width:500px;display:inline-block;width:100%">
+      <svg width="40" height="40" fill="none" stroke="var(--text3)" stroke-width="1.5" style="margin-bottom:12px"><path d="M20 28V12M12 18l8-8 8 8"/><path d="M4 26v6a2 2 0 002 2h28a2 2 0 002-2v-6"/></svg>
+      <h3>Drop your Excel file here</h3>
+      <p>or click to browse — supports .xlsx, .xls, .csv</p>
+    </div>
+  </div>
+
+  <div id="dashboardContent" style="display:none">
+    <div class="kpi-row" id="kpiRow"></div>
+    <div class="charts-row" id="chartsRow"></div>
+    <div class="table-wrap" id="tableWrap"></div>
+  </div>
+</div>
+
+<div class="footer">5 Roosters Fried Chicken — Sales Dashboard &copy; 2026</div>
+
+<script>
+let rawData = null;
+let chartInstances = [];
+
+const fileInput = document.getElementById('fileInput');
+const uploadZone = document.getElementById('uploadZone');
+
+['dragover','dragenter'].forEach(e => {
+  document.body.addEventListener(e, ev => { ev.preventDefault(); });
+});
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
+uploadZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    parseSheet(ws);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseSheet(ws) {
+  const val = (r,c) => {
+    const cell = ws[XLSX.utils.encode_cell({r,c})];
+    return cell ? cell.v : null;
+  };
+
+  const month = val(0,1);
+  const day = val(1,1);
+  const dateRaw = val(2,1);
+  let dateStr = '';
+  if(dateRaw instanceof Date) {
+    dateStr = dateRaw.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  } else {
+    dateStr = String(dateRaw);
+  }
+
+  const branches2026 = [];
+  for(let r=5; r<29; r++) {
+    const name = val(r,0);
+    if(!name) continue;
+    branches2026.push({
+      name, dailySales: val(r,1)||0, monthlySales: val(r,2)||0,
+      dailyTrans: val(r,3)||0, monthlyTrans: val(r,4)||0,
+      avgCheck: val(r,5)||0, dailyGoal: val(r,6)||0, goal: val(r,7)||0,
+      remaining: val(r,8)||0, achieved: val(r,9)||0,
+      avgDailySales: val(r,10)||0, forecast: val(r,11)||0, goalOverDaily: val(r,12)||0
+    });
+  }
+
+  const branches2025 = [];
+  for(let r=33; r<57; r++) {
+    const name = val(r,0);
+    if(!name) continue;
+    branches2025.push({
+      name, dailySales: val(r,1)||0, dailyGrowth: val(r,2)||0,
+      monthlySales: val(r,3)||0, monthlyGrowth: val(r,4)||0,
+      dailyTrans: val(r,5)||0, dailyTransGrowth: val(r,6)||0,
+      monthlyTrans: val(r,7)||0, monthlyTransGrowth: val(r,8)||0,
+      avgCheck: val(r,9)||0, avgCheckGrowth: val(r,10)||0
+    });
+  }
+
+  const total2026 = { dailySales: val(60,1)||0, monthlySales: val(60,3)||0, dailyTrans: val(60,5)||0, monthlyTrans: val(60,7)||0, avgCheck: val(60,9)||0 };
+  const total2025 = { dailySales: val(58,1)||0, monthlySales: val(58,3)||0, dailyTrans: val(58,5)||0, monthlyTrans: val(58,7)||0, avgCheck: val(58,9)||0 };
+  const growth = { dailySales: val(62,1)||0, monthlySales: val(62,3)||0, dailyTrans: val(62,5)||0, monthlyTrans: val(62,7)||0, avgCheck: val(62,9)||0 };
+
+  rawData = { month, day, dateStr, branches2026, branches2025, total2026, total2025, growth };
+  renderDashboard();
+}
+
+function fmt(n) {
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toFixed(0);
+}
+function fmtFull(n) { return new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(n); }
+function pct(n) { return (n*100).toFixed(1)+'%'; }
+function growthArrow(v) {
+  const cls = v>=0?'up':'down';
+  const arrow = v>=0?'▲':'▼';
+  return `<span class="kpi-sub ${cls}">${arrow} ${pct(Math.abs(v))} vs last year</span>`;
+}
+
+function renderDashboard() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('dashboardContent').style.display = 'block';
+  document.getElementById('btnDownload').style.display = 'inline-flex';
+  document.getElementById('dateText').textContent = `${rawData.day}, ${rawData.dateStr} — ${rawData.month}`;
+
+  chartInstances.forEach(c=>c.destroy());
+  chartInstances=[];
+
+  const d = rawData;
+  const totalGoal = d.branches2026.reduce((s,b)=>s+b.goal,0);
+  const totalAchieved = d.branches2026.reduce((s,b)=>s+b.monthlySales,0);
+  const goalPct = totalGoal>0? totalAchieved/totalGoal : 0;
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi red">
+      <div class="kpi-label">Today's Sales</div>
+      <div class="kpi-value">${fmt(d.total2026.dailySales)}</div>
+      ${growthArrow(d.growth.dailySales)}
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">Monthly Sales</div>
+      <div class="kpi-value">${fmt(d.total2026.monthlySales)}</div>
+      ${growthArrow(d.growth.monthlySales)}
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Today's Transactions</div>
+      <div class="kpi-value">${fmtFull(d.total2026.dailyTrans)}</div>
+      ${growthArrow(d.growth.dailyTrans)}
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-label">Monthly Transactions</div>
+      <div class="kpi-value">${fmtFull(d.total2026.monthlyTrans)}</div>
+      ${growthArrow(d.growth.monthlyTrans)}
+    </div>
+    <div class="kpi purple">
+      <div class="kpi-label">Avg. Check</div>
+      <div class="kpi-value">${d.total2026.avgCheck.toFixed(1)}</div>
+      ${growthArrow(d.growth.avgCheck)}
+    </div>
+    <div class="kpi cyan">
+      <div class="kpi-label">Goal Achievement</div>
+      <div class="kpi-value">${pct(goalPct)}</div>
+      <span class="kpi-sub" style="color:var(--text2)">${fmt(totalAchieved)} / ${fmt(totalGoal)}</span>
+    </div>
+  `;
+
+  renderCharts();
+  renderTable();
+}
+
+function renderCharts() {
+  const d = rawData;
+  const sorted = [...d.branches2026].sort((a,b)=>b.dailySales-a.dailySales);
+  const top10 = sorted.slice(0,10);
+
+  const colors = ['#e63946','#ff6b35','#f59e0b','#22c55e','#06b6d4','#3b82f6','#a855f7','#ec4899','#64748b','#84cc16'];
+
+  document.getElementById('chartsRow').innerHTML = `
+    <div class="chart-card">
+      <div class="chart-title"><div class="dot" style="background:var(--brand)"></div>Top 10 Branches — Daily Sales</div>
+      <canvas id="chartDailySales"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><div class="dot" style="background:var(--green)"></div>Goal Achievement by Branch</div>
+      <canvas id="chartGoal"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><div class="dot" style="background:var(--blue)"></div>Monthly Sales — 2026 vs 2025</div>
+      <canvas id="chartComparison"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><div class="dot" style="background:var(--purple)"></div>Average Check by Branch</div>
+      <canvas id="chartAvgCheck"></canvas>
+    </div>
+  `;
+
+  const chartDef = { responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#6b7280',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b7280',callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.05)'}}} };
+
+  chartInstances.push(new Chart(document.getElementById('chartDailySales'),{
+    type:'bar',
+    data:{labels:top10.map(b=>b.name),datasets:[{data:top10.map(b=>b.dailySales),backgroundColor:colors,borderRadius:6,barPercentage:.7}]},
+    options:{...chartDef,indexAxis:'y',scales:{...chartDef.scales,x:{...chartDef.scales.x,position:'top'},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:function(v){return this.getLabelForValue(v)}}}}}
+  }));
+
+  const goalBranches = d.branches2026.filter(b=>b.goal>0).sort((a,b)=>b.achieved-a.achieved);
+  chartInstances.push(new Chart(document.getElementById('chartGoal'),{
+    type:'bar',
+    data:{labels:goalBranches.map(b=>b.name),datasets:[{data:goalBranches.map(b=>b.achieved*100),backgroundColor:goalBranches.map(b=>b.achieved>=.4?'#22c55e':b.achieved>=.3?'#f59e0b':'#ef4444'),borderRadius:6,barPercentage:.7}]},
+    options:{...chartDef,indexAxis:'y',scales:{...chartDef.scales,x:{...chartDef.scales.x,position:'top',ticks:{...chartDef.scales.x.ticks,callback:v=>v+'%'}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:function(v){return this.getLabelForValue(v)}}}}}
+  }));
+
+  const compBranches = d.branches2026.filter(b=>b.monthlySales>0);
+  const compMap = {};
+  d.branches2025.forEach(b=>{compMap[b.name]=b.monthlySales});
+  chartInstances.push(new Chart(document.getElementById('chartComparison'),{
+    type:'bar',
+    data:{labels:compBranches.map(b=>b.name),datasets:[
+      {label:'2026',data:compBranches.map(b=>b.monthlySales),backgroundColor:'rgba(230,57,70,.7)',borderRadius:4,barPercentage:.8,categoryPercentage:.6},
+      {label:'2025',data:compBranches.map(b=>compMap[b.name]||0),backgroundColor:'rgba(100,116,139,.5)',borderRadius:4,barPercentage:.8,categoryPercentage:.6}
+    ]},
+    options:{...chartDef,plugins:{legend:{display:true,labels:{color:'#9ca3af',font:{size:11}}}},scales:{...chartDef.scales,x:{...chartDef.scales.x,ticks:{...chartDef.scales.x.ticks,maxRotation:45}}}}
+  }));
+
+  const avgSorted = [...d.branches2026].filter(b=>b.avgCheck>0).sort((a,b)=>b.avgCheck-a.avgCheck);
+  chartInstances.push(new Chart(document.getElementById('chartAvgCheck'),{
+    type:'bar',
+    data:{labels:avgSorted.map(b=>b.name),datasets:[{data:avgSorted.map(b=>b.avgCheck),backgroundColor:avgSorted.map((_,i)=>`hsl(${270+i*6},60%,55%)`),borderRadius:6,barPercentage:.7}]},
+    options:{...chartDef,scales:{...chartDef.scales,x:{...chartDef.scales.x,ticks:{...chartDef.scales.x.ticks,maxRotation:45}},y:{...chartDef.scales.y,ticks:{...chartDef.scales.y.ticks,callback:v=>v.toFixed(0)+' EGP'}}}}
+  }));
+}
+
+function renderTable() {
+  const d = rawData;
+  const sorted = [...d.branches2026].sort((a,b)=>b.dailySales-a.dailySales);
+  const growthMap = {};
+  d.branches2025.forEach(b=>{ growthMap[b.name] = b; });
+
+  let rows = sorted.map((b,i) => {
+    const g = growthMap[b.name];
+    const salesGrowth = g ? g.dailyGrowth : 0;
+    const transGrowth = g ? g.dailyTransGrowth : 0;
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
+    const achievedPct = b.achieved*100;
+    const barColor = achievedPct>=40?'var(--green)':achievedPct>=30?'var(--orange)':'var(--red)';
+
+    return `<tr>
+      <td><div class="branch-name"><span class="rank ${rankClass}">${i+1}</span>${b.name}</div></td>
+      <td style="font-weight:600">${fmtFull(b.dailySales)}</td>
+      <td><span class="growth-badge ${salesGrowth>=0?'up':'down'}">${salesGrowth>=0?'▲':'▼'} ${pct(Math.abs(salesGrowth))}</span></td>
+      <td>${fmtFull(b.monthlySales)}</td>
+      <td>${fmtFull(b.dailyTrans)}</td>
+      <td>${b.avgCheck.toFixed(1)}</td>
+      <td>
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(achievedPct*2,100)}%;background:${barColor}"></div></div>
+        <div class="goal-text">${pct(b.achieved)} of ${fmt(b.goal)}</div>
+      </td>
+      <td>${fmt(b.forecast)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableWrap').innerHTML = `
+    <div class="table-header">
+      <h3>Branch Performance Details</h3>
+      <span class="badge">${sorted.length} Branches</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Branch</th><th>Daily Sales</th><th>Growth</th><th>Monthly Sales</th>
+        <th>Transactions</th><th>Avg Check</th><th>Goal Progress</th><th>Forecast</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  `;
+}
+
+function toggleDropdown() {
+  document.getElementById('dropdownMenu').classList.toggle('show');
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('#downloadDropdown')) document.getElementById('dropdownMenu').classList.remove('show');
+});
+
+async function captureCanvas() {
+  return html2canvas(document.body, {
+    backgroundColor:'#0f1117', scale:2, useCORS:true,
+    logging:false, windowWidth:1440
+  });
+}
+
+async function downloadPDF() {
+  document.getElementById('dropdownMenu').classList.remove('show');
+  const canvas = await captureCanvas();
+  const { jsPDF } = window.jspdf;
+  const imgW = canvas.width; const imgH = canvas.height;
+  const pdfW = 297; const pdfH = (imgH * pdfW) / imgW;
+  const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'p' : 'l', unit:'mm', format:[pdfW, pdfH] });
+  pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, pdfH);
+  pdf.save('5Roosters_Dashboard.pdf');
+}
+
+async function downloadPNG() {
+  document.getElementById('dropdownMenu').classList.remove('show');
+  const canvas = await captureCanvas();
+  const link = document.createElement('a');
+  link.download = '5Roosters_Dashboard.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function downloadExcel() {
+  document.getElementById('dropdownMenu').classList.remove('show');
+  if(!rawData) return;
+  const d = rawData;
+  const rows = [
+    ['5 Roosters Fried Chicken — Sales Report'],
+    [`Date: ${d.dateStr}`, `Day: ${d.day}`, `Month: ${d.month}`],
+    [],
+    ['Branch','Daily Sales','Monthly Sales','Daily Trans.','Monthly Trans.','Avg Check','Goal','Achieved %','Forecast']
+  ];
+  d.branches2026.forEach(b=>{
+    rows.push([b.name, b.dailySales, b.monthlySales, b.dailyTrans, b.monthlyTrans, +b.avgCheck.toFixed(1), b.goal, +(b.achieved*100).toFixed(1), b.forecast]);
+  });
+  rows.push([]);
+  rows.push(['TOTAL', d.total2026.dailySales, d.total2026.monthlySales, d.total2026.dailyTrans, d.total2026.monthlyTrans, +d.total2026.avgCheck.toFixed(1)]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Dashboard');
+  XLSX.writeFile(wb, '5Roosters_Dashboard.xlsx');
+}
+</script>
+</body>
+</html>
