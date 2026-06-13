@@ -204,6 +204,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <!-- Overview Tab -->
     <div class="tab-page active" id="tab-overview">
       <div class="kpi-row" id="kpiRow"></div>
+      <div class="kpi-row" id="kpiRow2"></div>
       <div class="charts-row" id="chartsRow"></div>
       <div class="table-wrap" id="tableWrap"></div>
     </div>
@@ -338,37 +339,72 @@ function renderDashboard() {
     <div class="kpi red" onclick="switchTab('daily-sales')">
       <div class="kpi-label">Today's Sales</div>
       <div class="kpi-value">${fmt(d.total2026.dailySales)}</div>
-      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.dailySales)} EGP</div>
       ${growthArrow(d.growth.dailySales)}${hint}
     </div>
     <div class="kpi green" onclick="switchTab('monthly-sales')">
       <div class="kpi-label">Monthly Sales</div>
       <div class="kpi-value">${fmt(d.total2026.monthlySales)}</div>
-      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.monthlySales)} EGP</div>
       ${growthArrow(d.growth.monthlySales)}${hint}
     </div>
     <div class="kpi blue" onclick="switchTab('daily-trans')">
       <div class="kpi-label">Today's Transactions</div>
       <div class="kpi-value">${fmtFull(d.total2026.dailyTrans)}</div>
-      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.dailyTrans)}</div>
       ${growthArrow(d.growth.dailyTrans)}${hint}
     </div>
     <div class="kpi orange" onclick="switchTab('monthly-trans')">
       <div class="kpi-label">Monthly Transactions</div>
       <div class="kpi-value">${fmtFull(d.total2026.monthlyTrans)}</div>
-      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${fmtFull(d.total2026.monthlyTrans)}</div>
       ${growthArrow(d.growth.monthlyTrans)}${hint}
     </div>
     <div class="kpi purple" onclick="switchTab('avg-check')">
       <div class="kpi-label">Avg. Check</div>
       <div class="kpi-value">${d.total2026.avgCheck.toFixed(1)}</div>
-      <div class="kpi-sub" style="color:var(--text2);margin-bottom:4px">Total 2026: ${d.total2026.avgCheck.toFixed(1)} EGP</div>
       ${growthArrow(d.growth.avgCheck)}${hint}
     </div>
     <div class="kpi cyan" onclick="switchTab('goals')">
       <div class="kpi-label">Goal Achievement</div>
       <div class="kpi-value">${pct(goalPct)}</div>
       <span class="kpi-sub" style="color:var(--text2)">${fmt(totalAchieved)} / ${fmt(totalGoal)}</span>${hint}
+    </div>
+  `;
+
+  const sumDailySales = d.branches2026.reduce((s,b)=>s+b.dailySales,0);
+  const sumMonthlySales = d.branches2026.reduce((s,b)=>s+b.monthlySales,0);
+  const sumDailyTrans = d.branches2026.reduce((s,b)=>s+b.dailyTrans,0);
+  const sumMonthlyTrans = d.branches2026.reduce((s,b)=>s+b.monthlyTrans,0);
+  const sumAvgCheck = sumDailyTrans>0 ? sumDailySales/sumDailyTrans : 0;
+  const sumForecast = d.branches2026.reduce((s,b)=>s+b.forecast,0);
+
+  document.getElementById('kpiRow2').innerHTML = `
+    <div class="kpi red" style="border-top:3px solid var(--brand2);cursor:default">
+      <div class="kpi-label">Total Daily Sales 2026</div>
+      <div class="kpi-value">${fmtFull(sumDailySales)}</div>
+      <div class="kpi-sub" style="color:var(--text2)">EGP — Sum of all branches</div>
+    </div>
+    <div class="kpi green" style="border-top:3px solid var(--green);cursor:default">
+      <div class="kpi-label">Total Monthly Sales 2026</div>
+      <div class="kpi-value">${fmtFull(sumMonthlySales)}</div>
+      <div class="kpi-sub" style="color:var(--text2)">EGP — Sum of all branches</div>
+    </div>
+    <div class="kpi blue" style="border-top:3px solid var(--blue);cursor:default">
+      <div class="kpi-label">Total Daily Trans. 2026</div>
+      <div class="kpi-value">${fmtFull(sumDailyTrans)}</div>
+      <div class="kpi-sub" style="color:var(--text2)">Sum of all branches</div>
+    </div>
+    <div class="kpi orange" style="border-top:3px solid var(--orange);cursor:default">
+      <div class="kpi-label">Total Monthly Trans. 2026</div>
+      <div class="kpi-value">${fmtFull(sumMonthlyTrans)}</div>
+      <div class="kpi-sub" style="color:var(--text2)">Sum of all branches</div>
+    </div>
+    <div class="kpi purple" style="border-top:3px solid var(--purple);cursor:default">
+      <div class="kpi-label">Avg. Check (Calculated)</div>
+      <div class="kpi-value">${sumAvgCheck.toFixed(1)}</div>
+      <div class="kpi-sub" style="color:var(--text2)">EGP — Sales ÷ Transactions</div>
+    </div>
+    <div class="kpi cyan" style="border-top:3px solid var(--cyan);cursor:default">
+      <div class="kpi-label">Monthly Forecast 2026</div>
+      <div class="kpi-value">${fmt(sumForecast)}</div>
+      <div class="kpi-sub" style="color:var(--text2)">EGP — Sum of all branches</div>
     </div>
   `;
 
